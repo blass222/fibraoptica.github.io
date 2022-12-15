@@ -3,16 +3,12 @@ class fibraOptica {
         this.posicion = posicion;
         this.buffer = buffer;
         this.color = color;
-        this.mostrarFibra = `La posicion ${this.posicion } es la fibra color ${this.color}, del buffer ${this.buffer}`;
-        this.fibra0 = 'Esa fibra no existe';
+        this.mostrarFibra = `Fibra ${this.posicion }, Color ${this.color}, Buffer ${this.buffer}`;
+       
     }
     verInfo(){
        document.getElementById("parrafo").innerHTML = this.mostrarFibra;
     }
-    verInfo2(){
-        document.getElementById("parrafo").innerHTML = this.fibra0;
-    }
-    
 }
 const fibra0 = 'esa fibra no exite';
 const fibra1 = new fibraOptica(1,"azul","azul");
@@ -325,8 +321,8 @@ function buscar() {
     const input = document.getElementById("button");
     const value = input.value;
     const fibra = value;
+    
     fibras[fibra].verInfo();
+    
 }
 
-
-    

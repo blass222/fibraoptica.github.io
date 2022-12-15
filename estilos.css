@@ -1,3 +1,4 @@
+
 /*Estilos en el navbar*/
 .nav-enlaces {
     display:inline-flex;
@@ -65,7 +66,7 @@ html{
     color: #ffffff;
 }
 body{
-   font-family: 'Source Sans Pro', sans-serif;
+   font-family: 'Kanit', sans-serif;
     margin: 0;
     background-color: #303030;    
 }
