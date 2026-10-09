@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buscador de Fibra Óptica</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--tx:#14213d;--mut:#5b6785;--ac:#0a84ff;--bd:#dde3ef;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1321;--card:#162036;--tx:#eef2fb;--mut:#9aa7c7;--ac:#4aa3ff;--bd:#27355a}}
+:root[data-theme="dark"]{--bg:#0d1321;--card:#162036;--tx:#eef2fb;--mut:#9aa7c7;--ac:#4aa3ff;--bd:#27355a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+header{text-align:center;padding:36px 16px 56px;background:linear-gradient(135deg,#0a84ff,#6a3df0);color:#fff}
+header h1{margin:0 0 6px;font-size:clamp(1.8rem,5vw,2.5rem)}
+header p{margin:0;opacity:.9}
+main{max-width:640px;margin:-34px auto 0;padding:0 16px 30px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.1)}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:4px}
+.row{display:flex;gap:10px}
+.row>div{flex:1;min-width:0}
+input,select{width:100%;padding:13px 14px;font-size:1.1rem;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+input:focus,select:focus{outline:2px solid var(--ac)}
+button{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:600;font-size:1rem;cursor:pointer}
+#res{margin-top:16px;display:none}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item{border:1px solid var(--bd);border-radius:14px;padding:14px;text-align:center}
+.item small{color:var(--mut);display:block}
+.sw{width:64px;height:64px;border-radius:50%;margin:10px auto;border:3px solid var(--bd)}
+.item b{font-size:1.15rem}
+.item span{display:block;color:var(--mut);font-size:.9rem}
+.note{font-size:.85rem;color:var(--mut);margin-top:12px;text-align:center}
+.err{color:#e02424;text-align:center}
+h2{font-size:1rem;margin:26px 0 10px}
+.tbl{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.t{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:.9rem}
+.t i{width:20px;height:20px;border-radius:50%;border:2px solid var(--bd);flex:none}
+.st{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;font-size:.9rem}
+.st th,.st td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--bd)}
+.st th{color:var(--mut);font-weight:600;font-size:.8rem}
+.st tr:last-child td{border-bottom:0}
+.st b{color:var(--ac)}
+.wrap{overflow-x:auto}
+footer{text-align:center;color:var(--mut);padding:10px 16px 30px;font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>💡 Fibra Óptica</h1>
+  <p>Ingresá el número de fibra y mirá en qué buffer está y de qué color es</p>
+</header>
+<main>
+  <div class="box">
+    <div class="row">
+      <div><label for="n">Número de fibra</label><input id="n" type="number" inputmode="numeric" min="1" placeholder="Ej: 27"></div>
+      <div><label for="s">Fibras por buffer</label>
+        <select id="s"><option>12</option><option>8</option><option>6</option><option>4</option><option>2</option></select></div>
+    </div>
+    <button id="go">Buscar</button>
+    <div id="res"></div>
+  </div>
+  <h2>Código de colores (TIA-598)</h2>
+  <div class="tbl" id="tbl"></div>
+<h2>Pérdida de splitters PLC (balanceados)</h2>
+  <div class="wrap"><table class="st"><thead><tr><th>Relación</th><th>Teórica</th><th>Típica (máx.)</th></tr></thead><tbody id="plc"></tbody></table></div>
+  <h2>Pérdida de splitters FBT (desbalanceados)</h2>
+  <div class="wrap"><table class="st"><thead><tr><th>Reparto</th><th>Salida menor</th><th>Salida mayor</th></tr></thead><tbody id="fbt"></tbody></table></div>
+  <p class="note">Valores típicos de referencia en dB, por salida. Cada conector o empalme suma aprox. 0,3–0,5 dB aparte. Verificá siempre la hoja de datos del fabricante.</p>
+</main>
+<footer>© <span id="y"></span> Blas López · Todos los derechos reservados</footer>
+<script>
+const C=[["Azul","#1e66ff"],["Naranja","#ff8a00"],["Verde","#1fa84f"],["Marrón","#7b4a22"],["Gris","#8a929c"],["Blanco","#ffffff"],["Rojo","#e02424"],["Negro","#111111"],["Amarillo","#f5d800"],["Violeta","#8b3fd9"],["Rosa","#ff8fc0"],["Celeste","#19c9d9"]];
+const $=id=>document.getElementById(id);
+$("tbl").innerHTML=C.map((c,i)=>`<div class="t"><i style="background:${c[1]}"></i>${i+1}. ${c[0]}</div>`).join("");
+const P=[[2,"3,0","4,0"],[4,"6,0","7,2"],[8,"9,0","10,5"],[16,"12,0","13,7"],[32,"15,0","17,1"],[64,"18,1","21,0"]];
+$("plc").innerHTML=P.map(p=>`<tr><td>1:${p[0]}</td><td>${p[1]} dB</td><td><b>${p[2]} dB</b></td></tr>`).join("");
+const B=[["50 / 50","3,5","3,5"],["60 / 40","2,2","4,4"],["70 / 30","1,5","5,5"],["80 / 20","1,0","7,5"],["90 / 10","0,5","10,5"],["95 / 5","0,3","13,5"]];
+$("fbt").innerHTML=B.map(b=>`<tr><td>${b[0]}</td><td><b>${b[1]} dB</b></td><td><b>${b[2]} dB</b></td></tr>`).join("");
+$("y").textContent=new Date().getFullYear();
+function buscar(){
+  const n=parseInt($("n").value,10), s=parseInt($("s").value,10), r=$("res");
+  r.style.display="block";
+  if(!n||n<1){r.innerHTML='<p class="err">Ingresá un número de fibra válido.</p>';return;}
+  const buf=Math.ceil(n/s), pos=(n-1)%s+1;
+  const cf=C[(pos-1)%12], cb=C[(buf-1)%12];
+  const vuelta=Math.floor((buf-1)/12);
+  r.innerHTML=`<div class="pair">
+   <div class="item"><small>Buffer</small><div class="sw" style="background:${cb[1]}"></div><b>N° ${buf} · ${cb[0]}</b>${vuelta?`<span>Color repetido (vuelta ${vuelta+1}): suele llevar anillo o marca</span>`:""}</div>
+   <div class="item"><small>Fibra dentro del buffer</small><div class="sw" style="background:${cf[1]}"></div><b>N° ${pos} · ${cf[0]}</b></div></div>
+   <p class="note">Fibra ${n}: buffer ${buf} (${cb[0]}), fibra ${cf[0]}.</p>`;
+}
+$("go").addEventListener("click",buscar);
+$("n").addEventListener("keydown",e=>{if(e.key==="Enter")buscar();});
+</script>
+</body>
+</html>
